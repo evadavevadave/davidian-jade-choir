@@ -42,12 +42,13 @@ int main(int argc, char** argv)
     if (!panel_init(&p, NULL, NULL))
         return 1;
     /* A playing moment with a control being adjusted. */
-    panel_set(&p, PORT_VOLUME, 0.55f);
-    panel_set(&p, PORT_TREBLE, 0.65f);
+    panel_set(&p, PORT_VOLUME2, 0.55f);
+    panel_set(&p, PORT_TREBLE2, 0.65f);
+    panel_set(&p, PORT_BRIGHT1, 1.0f);
     panel_set(&p, PORT_DISTORTION, 0.35f);
     panel_set(&p, PORT_FS_REVERB, 0.0f);
     panel_set(&p, PORT_LFO, 0.7f);
-    p.shown = 6; /* DISTORTION */
+    p.shown = 14; /* DISTORTION */
     panel_draw(&p);
     if (!write_bmp(argv[1], p.px, PANEL_W, PANEL_H)) {
         printf("cannot write %s\n", argv[1]);

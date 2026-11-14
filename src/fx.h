@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later
  * Copyright (C) 2026 Davidian. See LICENSE and NOTICE.md. */
-/* The parts of the amplifier that aren't plain circuits: the chorus/vibrato LFO (IC8), the
- * BBD delay and its clock (IC6 MN3007, IC7 MN3101), the JFET mute switches, the spring reverb
- * tank, and the oversampling filters around the preamp. */
+/* The parts of the amplifier that aren't plain circuits: the chorus/vibrato LFO, the BBD delay
+ * and its clock (IC3 MN3007, IC4 MN3101), the JFET switch timing, the spring reverb tank, and
+ * the oversampling filters around the preamps. */
 #ifndef JD_FX_H
 #define JD_FX_H
 
@@ -14,100 +14,78 @@
 #    define M_PI 3.14159265358979323846
 #endif
 
-/* ================= LFO: IC8a integrator and IC8b Schmitt trigger =================
- * IC8 runs on a single +15 V supply. R160 10k / R158 150 / R159 10k make two bias points:
- * IC8a (+) at 7.556 V, and 7.444 V for the RATE pot's lower end (through R155 15k, C93) and
- * the depth pot. IC8b's output (the square) drives the RATE pot VR8 100kB; the wiper feeds the
- * integrator (R166 1M, C95 0.082u) at MANUAL, the pot's lower end does at FIXED (chorus).
- * IC8b compares (27 * square + 39 * triangle) / 66 (R164 39k, R165 27k) with 7.444 V. */
-#define LFO_VCC 15.0
-#define LFO_BIAS_HI (LFO_VCC * (10e3 + 150.0) / (20e3 + 150.0))
-#define LFO_BIAS_LO (LFO_VCC * 10e3 / (20e3 + 150.0))
-#define LFO_SWING_LO 1.0           /* NJM4558 swing: within 1 V of each rail (datasheet typ) */
-#define LFO_SWING_HI (LFO_VCC - 1.0)
-#define LFO_R164 39e3
-#define LFO_R165 27e3
-#define LFO_R166 1e6
-#define LFO_C95 0.082e-6
-#define LFO_R155 15e3
-#define LFO_VR8 100e3
-#define LFO_VREF LFO_BIAS_LO       /* IC8b (-): see README on Q35/Q36 */
-
-/* Triangle limits: where the Schmitt trigger flips at each square level. */
-#define LFO_TRI_LO ((66.0 * LFO_VREF - 27.0 * LFO_SWING_HI) / 39.0)
-#define LFO_TRI_HI ((66.0 * LFO_VREF - 27.0 * LFO_SWING_LO) / 39.0)
+/* ================= LFO (IC5) =================
+ * The schematic prints the LFO's waveforms next to it, and the model follows them:
+ *   CHORUS: a triangle, 9 V peak to peak, 1.2 s period.
+ *   VIBRATO: SPEED (VR7 100kA) from a 500 ms period, 10 V p-p, to 120 ms, 13 V p-p, where the
+ *   drawing shows the triangle clipped flat at the op amp's limits.
+ * The speed law between the printed ends (geometric in rotation) and the growth of the
+ * amplitude up to the clipping are estimates (see README). DEPTH (VR8 100kB) scales the
+ * vibrato's triangle; CHORUS takes it whole (SW2(B)). */
+#define LFO_CHORUS_PERIOD 1.2
+#define LFO_CHORUS_PP 9.0
+#define LFO_VIB_SLOW 0.5
+#define LFO_VIB_FAST 0.12
+#define LFO_VIB_PP_SLOW 10.0
+#define LFO_VIB_PP_FAST 13.0
+#define LFO_CLIP 6.5 /* IC5 on +15 V, biased at 7.5 V: 13 V p-p */
 
 typedef struct {
-    double tri; /* IC8a output, volts */
-    int high;   /* IC8b output high */
+    double phase; /* 0-1 */
     double T;
 } Lfo;
 
 static void lfo_init(Lfo* l, double fs)
 {
     l->T = 1.0 / fs;
-    l->tri = LFO_TRI_LO;
-    l->high = 0;
+    l->phase = 0.0;
 }
 
-/* rate: VR8 rotation (0-1); fixed: the FIXED (chorus) contact instead of the wiper. */
-static double lfo_tick(Lfo* l, double rate, int fixed)
+static double lfo_period(double speed, int vib)
 {
-    const double vsq = l->high ? LFO_SWING_HI : LFO_SWING_LO;
-    const double x = fixed ? 0.0 : clampd(rate, 0.0, 1.0);
-    const double rtop = (1.0 - x) * LFO_VR8, rbot = x * LFO_VR8 + LFO_R155;
-    const double vth = LFO_BIAS_LO + (vsq - LFO_BIAS_LO) * rbot / (rtop + rbot);
-    const double rth = rtop * rbot / (rtop + rbot);
-    const double i = (vth - LFO_BIAS_HI) / (rth + LFO_R166);
-    double vp;
-    l->tri = clampd(l->tri - i * l->T / LFO_C95, LFO_SWING_LO, LFO_SWING_HI);
-    vp = (LFO_R165 * vsq + LFO_R164 * l->tri) / (LFO_R164 + LFO_R165);
-    if (l->high && vp < LFO_VREF)
-        l->high = 0;
-    else if (!l->high && vp > LFO_VREF)
-        l->high = 1;
-    return l->tri;
+    if (!vib)
+        return LFO_CHORUS_PERIOD;
+    return LFO_VIB_SLOW * pow(LFO_VIB_FAST / LFO_VIB_SLOW, clampd(speed, 0.0, 1.0));
 }
 
-/* Rate in Hz for a pot setting, from the same equations (for the display and the tests). */
-static double lfo_rate_hz(double rate, int fixed)
+/* Returns the LFO voltage about its bias: the triangle the BBD clock sees. */
+static double lfo_tick(Lfo* l, double speed, double depth, int vib)
 {
-    double t = 0.0;
-    int k;
-    for (k = 0; k < 2; ++k) {
-        const double vsq = k ? LFO_SWING_HI : LFO_SWING_LO;
-        const double x = fixed ? 0.0 : clampd(rate, 0.0, 1.0);
-        const double rtop = (1.0 - x) * LFO_VR8, rbot = x * LFO_VR8 + LFO_R155;
-        const double vth = LFO_BIAS_LO + (vsq - LFO_BIAS_LO) * rbot / (rtop + rbot);
-        const double rth = rtop * rbot / (rtop + rbot);
-        const double i = fabs(vth - LFO_BIAS_HI) / (rth + LFO_R166);
-        t += (LFO_TRI_HI - LFO_TRI_LO) * LFO_C95 / i;
-    }
-    return 1.0 / t;
+    double tri, amp;
+    l->phase += l->T / lfo_period(speed, vib);
+    l->phase -= floor(l->phase);
+    tri = l->phase < 0.5 ? 4.0 * l->phase - 1.0 : 3.0 - 4.0 * l->phase; /* -1..1 */
+    if (!vib)
+        return 0.5 * LFO_CHORUS_PP * tri;
+    /* The printed 13 V p-p at full speed is the clipped form of a larger triangle; it grows
+     * from the printed 10 V p-p at the slow end. */
+    amp = 0.5 * (LFO_VIB_PP_SLOW + 2.0 * (LFO_VIB_PP_FAST - LFO_VIB_PP_SLOW) * clampd(speed, 0.0, 1.0));
+    return clampd(depth, 0.0, 1.0) * clampd(amp * tri, -LFO_CLIP, LFO_CLIP);
 }
 
 /* ================= BBD clock and delay =================
- * The schematic gives the MN3101 clock range as 80-350 kHz. The MN3007 has 1024 stages, so
- * its delay is 512 / f_clock: 6.40 ms at 80 kHz, 1.46 ms at 350 kHz. The triangle reaches the
- * clock through Q34 (emitter follower), R151 10k / C84 0.047u and D26; the full triangle
- * (as at FIXED, or DEPTH at full) spans the full clock range, higher voltage giving a higher
- * clock. The delay is taken as linear in the control voltage (see README). */
+ * The schematic prints the clock's period in CHORUS as 2.5-12 us across the 9 V triangle. The
+ * MN3007 has 1024 stages, so the delay is 512 clock periods: 1.28 ms to 6.14 ms. The clock
+ * period is taken as linear in the LFO voltage (see README); vibrato's larger swing extends
+ * it, held between 1.5 and 16 us. Q24 (follower), R139 15k / C74 1.5n smooth the control. */
 #define BBD_STAGES 1024
-#define BBD_CLK_MIN 80e3
-#define BBD_CLK_MAX 350e3
-#define BBD_DELAY_MAX (BBD_STAGES / 2.0 / BBD_CLK_MIN)
-#define BBD_DELAY_MIN (BBD_STAGES / 2.0 / BBD_CLK_MAX)
-#define BBD_CV_TAU (10e3 * 0.047e-6) /* R151, C84 */
-/* BBD voltage gain, from the schematic's signal levels: 760 mV at IC5a's output, 850 mV at
- * Q27's emitter. The output filter (C79 to Q27) passes 0.9536 at 1 kHz (test_dsp works this
- * out from its netlist), so the chip itself gives 850 / 760 / 0.9536. */
-#define BBD_POST_1K 0.9536
-#define BBD_GAIN (850.0 / 760.0 / BBD_POST_1K)
+#define BBD_T_MIN 2.5e-6
+#define BBD_T_MAX 12e-6
+#define BBD_T_LO 1.5e-6
+#define BBD_T_HI 16e-6
+#define BBD_DELAY_MAX (BBD_STAGES / 2.0 * BBD_T_HI)
+#define BBD_CV_TAU (15e3 * 1.5e-9)
+/* BBD voltage gain, from the schematic's levels: 940 mV into the BBD and 2.2 V at IC2a's
+ * output, through the output filter and de-emphasis, which pass BBD_POST_1K at 1 kHz
+ * (test_dsp works it out from their netlists). */
+#define BBD_POST_1K 1.8400
+#define BBD_GAIN (2200.0 / 940.0 / BBD_POST_1K)
 
 static double bbd_delay_for(double v)
 {
-    const double n = clampd((v - LFO_TRI_LO) / (LFO_TRI_HI - LFO_TRI_LO), 0.0, 1.0);
-    return BBD_DELAY_MAX - n * (BBD_DELAY_MAX - BBD_DELAY_MIN);
+    const double mid = 0.5 * (BBD_T_MIN + BBD_T_MAX), half = 0.5 * (BBD_T_MAX - BBD_T_MIN);
+    const double t = clampd(mid + half * v / (0.5 * LFO_CHORUS_PP), BBD_T_LO, BBD_T_HI);
+    return BBD_STAGES / 2.0 * t;
 }
 
 typedef struct {
@@ -126,7 +104,7 @@ static int bbd_init(Bbd* b, double fs)
     b->buf = (float*)calloc((size_t)b->size, sizeof(float));
     b->w = 0;
     b->fs = fs;
-    b->cv = 0.5 * (LFO_TRI_LO + LFO_TRI_HI);
+    b->cv = 0.0;
     b->cv_k = 1.0 - exp(-1.0 / (BBD_CV_TAU * fs));
     return b->buf != NULL;
 }
@@ -136,8 +114,8 @@ static void bbd_reset(Bbd* b)
     memset(b->buf, 0, sizeof(float) * (size_t)b->size);
 }
 
-/* Writes x, returns the sample delayed by the clock that control voltage v sets (4-point
- * cubic interpolation). */
+/* Writes x, returns the sample delayed by the clock that LFO voltage v sets (4-point cubic
+ * interpolation). */
 static double bbd_tick(Bbd* b, double x, double v)
 {
     double d, frac, y0, y1, y2, y3, c1, c2, c3;
@@ -158,37 +136,21 @@ static double bbd_tick(Bbd* b, double x, double v)
     return BBD_GAIN * (((c3 * frac + c2) * frac + c1) * frac + y1);
 }
 
-/* ================= JFET switch gate (Q17, Q21) =================
- * Q18 and Q19 swing each gate network between the rails. The gate follows its capacitor
- * (C53 / C57, 0.047u, charged through R86 / R94 1M, plus R91 / R92 100k when pulled up)
- * through D17 / D21 (0.41 V at 15 uA), and the channel conducts in proportion to how far the
- * gate is above pinch-off. */
-#define SW_C 0.047e-6
-#define SW_R_DOWN 1e6
-#define SW_R_UP 1.1e6
+/* ================= JFET switch gates (Q4, Q9, Q10) =================
+ * Each 2SK246 switch's gate follows a 1M / 0.047u network (R71/C37, R73/C89, and C14 for Q4)
+ * that Q12 or the footswitch swings between the rails, through a diode (0.41 V at 15 uA). The
+ * channel conducts in proportion to how far the gate is above pinch-off, taken as -1.5 V
+ * (the 2SK246 datasheet gives -0.7 to -6 V; estimate). So each switch fades over about 50 ms. */
+#define SW_TAU (1e6 * 0.047e-6)
 #define SW_DIODE 0.41
-#define JFET_VP (-0.85) /* 2SK117 pinch-off, middle of the datasheet's -0.2 to -1.5 V */
+#define GATE_VP (-1.5)
 
-typedef struct { double vc, k_up, k_down; } Gate;
+typedef struct { double vc, k; } Gate;
 
 static void gate_init(Gate* g, double fs, int on)
 {
-    g->k_up = 1.0 - exp(-1.0 / (SW_R_UP * SW_C * fs));
-    g->k_down = 1.0 - exp(-1.0 / (SW_R_DOWN * SW_C * fs));
+    g->k = 1.0 - exp(-1.0 / (SW_TAU * fs));
     g->vc = on ? 15.0 : -15.0;
-}
-
-/* Advances n samples toward on or off; returns the conduction 0-1. */
-static double gate_tick(Gate* g, int on, int n)
-{
-    const double target = on ? 15.0 : -15.0;
-    const double k = on ? g->k_up : g->k_down;
-    double vgs;
-    g->vc = target + (g->vc - target) * pow(1.0 - k, n);
-    vgs = g->vc + SW_DIODE;
-    if (vgs > 0.0)
-        vgs = 0.0;
-    return clampd((vgs - JFET_VP) / -JFET_VP, 0.0, 1.0);
 }
 
 static double gate_level(const Gate* g)
@@ -196,20 +158,31 @@ static double gate_level(const Gate* g)
     double vgs = g->vc + SW_DIODE;
     if (vgs > 0.0)
         vgs = 0.0;
-    return clampd((vgs - JFET_VP) / -JFET_VP, 0.0, 1.0);
+    return clampd((vgs - GATE_VP) / -GATE_VP, 0.0, 1.0);
+}
+
+/* Advances n samples toward on or off; returns the conduction 0-1. */
+static double gate_tick(Gate* g, int on, int n)
+{
+    const double target = on ? 15.0 : -15.0;
+    g->vc = target + (g->vc - target) * pow(1.0 - g->k, n);
+    return gate_level(g);
 }
 
 /* ================= Spring reverb tank (three springs) =================
- * The tank is a mechanical part with no values on the schematic, and no published data was
- * found for it, so this is a generic three-spring model and its numbers are estimates (see
- * README): each spring is a delay loop with stretched all-pass dispersion (the "chirp"),
- * a loop low-pass, and a decay set by TANK_T60. */
+ * The original is Roland's Z-3F; its listed replacement, the Accutronics 8AB2D1A, is a short
+ * (9-1/4") three-spring type 8 tank with medium decay (1.75-3.0 s). Its coils are in amp.h.
+ * Between the coils the springs are modelled generically, and those numbers are estimates
+ * (see README): each spring is a delay loop with stretched all-pass dispersion (the "chirp"),
+ * a loop low-pass, and a decay of TANK_T60, the middle of the medium range. The input is the
+ * drive coil's current and the output the pickup coil's voltage; TANK_GAIN (volts per amp) is
+ * set so the reverb at full REVERB is about as loud as the dry signal. */
 #define TANK_SPRINGS 3
 #define TANK_AP 24
-#define TANK_T60 2.5
+#define TANK_T60 2.375
 #define TANK_LP_HZ 4500.0
 #define TANK_AP_COEF 0.62
-#define TANK_GAIN 0.25
+#define TANK_GAIN 0.05
 static const double TANK_TRANSIT[TANK_SPRINGS] = { 0.0295, 0.0337, 0.0371 }; /* seconds */
 
 typedef struct {

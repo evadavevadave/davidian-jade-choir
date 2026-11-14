@@ -133,7 +133,7 @@ static void test_view(AudioUnit au)
         @autoreleasepool {
             factory = [[factory_class alloc] init];
             view = [factory uiViewForAudioUnit:au withSize:NSZeroSize];
-            check("view opens at 1100 x 470", view && NSWidth([view frame]) == 1100 && NSHeight([view frame]) == 470);
+            check("view opens at 1100 x 640", view && NSWidth([view frame]) == 1100 && NSHeight([view frame]) == 640);
             check("view holds the panel", view && [[view subviews] count] == 1);
             [factory release];
         }
@@ -182,7 +182,7 @@ int main(int argc, char** argv)
         AudioUnitParameterID ids[64];
         AudioUnitGetPropertyInfo(au, kAudioUnitProperty_ParameterList, kAudioUnitScope_Global, 0, &size, NULL);
         n = size / sizeof(AudioUnitParameterID);
-        check("18 parameters: 17 controls and the LFO lamp (the host has bypass)", n == 18);
+        check("23 parameters: 22 controls and the LFO lamp (the host has bypass)", n == 23);
         size = sizeof ids;
         AudioUnitGetProperty(au, kAudioUnitProperty_ParameterList, kAudioUnitScope_Global, 0, ids, &size);
         size = sizeof info;

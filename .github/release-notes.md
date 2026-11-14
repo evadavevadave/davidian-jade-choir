@@ -1,4 +1,4 @@
-Ready-made **Davidian Jade Choir** plugins for Windows, macOS and Linux, built and tested from the same source by GitHub Actions. This is the first release: a circuit model of a classic 1984 stereo chorus amplifier head, from its schematic.
+Ready-made **Davidian Jade Choir** plugins for Windows, macOS and Linux, built and tested from the same source by GitHub Actions. This is the first release: a circuit model of a classic two-channel stereo chorus combo amplifier, from its 1983 service notes.
 
 ## Downloads
 
@@ -21,9 +21,9 @@ Restart the host (or rescan its plugins) and look for **Jade Choir** by **Davidi
 
 ## What it is
 
-- Mono in, stereo out: the left output is the head's "normal" line out (dry plus reverb), the right is the "effect" line out (chorus or vibrato plus reverb, or dry when the effect is off). Played through two speakers, that is the original's spatial chorus.
-- Input jack (High/Low), Volume, Treble, Middle, Bass, Hi-Treble, Distortion (with its OFF position), Reverb, vibrato Speed and Depth, the Vibrato/Off/Chorus switch, the three footswitches, and a Stereo/Mixed line-out switch.
-- The power amplifier and speakers are not modelled.
+- Mono in, stereo out: the two outputs are the two speakers. Channel 2's dry signal goes to the left and its chorus or vibrato to the right, so through two speakers you get the original's spatial chorus. Channel 1 and the reverb go to both.
+- Both channels: Bright, Volume, Treble, Middle and Bass; channel 2 adds Distortion (with its OFF position) and Reverb. Vibrato Speed and Depth, the Vibrato/Off/Chorus switch, the three footswitches, and which channel the input feeds (or both).
+- The power amps are modelled up to their clipping; the speakers and cabinet are not.
 
 ## Testing status
 

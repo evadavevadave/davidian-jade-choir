@@ -156,14 +156,15 @@ int main(int argc, char** argv)
     check("the widget is a child of the host's window", GetParent(child) == parent);
     GetClientRect(child, &rc);
     snprintf(label, sizeof label, "window is %ldx%ld", rc.right, rc.bottom);
-    check(label, rc.right == 1100 && rc.bottom == 470);
+    check(label, rc.right == 1100 && rc.bottom == 640);
     check("offers the idle interface",
           d->extension_data("http://lv2plug.in/ns/extensions/ui#idleInterface") != NULL);
 
     /* The host sends every port's value first. */
     {
         static const float vals[PORT_COUNT] = {
-            0, 0, 0, 0, 0.8f, 0.5f, 0.5f, 0.5f, 0, 0, 0.8f, 0.5f, 0.5f, 2, 1, 1, 1, 0, 1.0f, 0, 1, 0.6f
+            0, 0, 0, 1, 0, 0, 0.8f, 0.5f, 0.5f, 0.5f, 0, 0.8f, 0.5f, 0.5f, 0.5f, 0, 0.8f, 0.5f, 0.5f, 2,
+            1, 1, 1, 1.0f, 0, 1, 0.6f
         };
         for (i = JD_FIRST_CONTROL; i < PORT_COUNT; ++i)
             d->port_event(ui, (uint32_t)i, sizeof(float), 0, &vals[i]);
@@ -171,30 +172,30 @@ int main(int argc, char** argv)
     check("port updates from the host write nothing back", writes == 0);
     pump();
 
-    drag(child, 172, 168, 36);
-    snprintf(label, sizeof label, "dragging Volume down 36 px sends port %d = %.3f", last_port, last_value);
-    check(label, last_port == PORT_VOLUME && fabsf(last_value - 0.6f) < 0.01f);
+    drag(child, 158, 150, 36);
+    snprintf(label, sizeof label, "dragging CH 1 Volume down 36 px sends port %d = %.3f", last_port, last_value);
+    check(label, last_port == PORT_VOLUME1 && fabsf(last_value - 0.6f) < 0.01f);
 
-    drag(child, 268, 168, -400);
-    snprintf(label, sizeof label, "dragging Treble far up stops at %.3f", last_value);
-    check(label, last_port == PORT_TREBLE && last_value == 1.0f);
+    drag(child, 250, 358, -400);
+    snprintf(label, sizeof label, "dragging CH 2 Treble far up stops at %.3f", last_value);
+    check(label, last_port == PORT_TREBLE2 && last_value == 1.0f);
 
-    SendMessageA(child, WM_LBUTTONDBLCLK, MK_LBUTTON, xy(758, 168));
-    SendMessageA(child, WM_LBUTTONUP, 0, xy(758, 168));
+    SendMessageA(child, WM_LBUTTONDBLCLK, MK_LBUTTON, xy(618, 358));
+    SendMessageA(child, WM_LBUTTONUP, 0, xy(618, 358));
     snprintf(label, sizeof label, "double-click resets Reverb to %.2f", last_value);
     check(label, last_port == PORT_REVERB && fabsf(last_value - 0.3f) < 1e-4f);
 
-    click(child, 1016, 178 - 18);
+    click(child, 920, 368 - 18);
     check("clicking the top of the mode switch selects Vibrato", last_port == PORT_MODE && last_value == 0.0f);
-    click(child, 46, 190 + 18);
-    check("clicking the bottom of the input switch selects Low", last_port == PORT_INPUT_JACK && last_value == 1.0f);
-    click(child, 290, 392);
+    click(child, 658, 160 + 18);
+    check("clicking the bottom of the jack switch selects Low", last_port == PORT_INPUT_JACK && last_value == 1.0f);
+    click(child, 550, 572);
     check("the reverb footswitch turns it off", last_port == PORT_FS_REVERB && last_value == 0.0f);
-    click(child, 660, 392 + 18);
-    check("clicking the bottom of the line out switch selects Mixed", last_port == PORT_LINE_OUT && last_value == 1.0f);
+    click(child, 552, 160 + 18);
+    check("clicking the bottom of the channel switch selects Both", last_port == PORT_CHANNEL && last_value == 2.0f);
 
     {
-        POINT pt = { 856, 168 };
+        POINT pt = { 752, 358 };
         ClientToScreen(child, &pt);
         writes = 0;
         SendMessageA(child, WM_MOUSEWHEEL, MAKEWPARAM(0, WHEEL_DELTA), MAKELPARAM(pt.x, pt.y));

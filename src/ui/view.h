@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 #define JD_VIEW_W 1100
-#define JD_VIEW_H 470
+#define JD_VIEW_H 640
 
 typedef struct JdView JdView;
 

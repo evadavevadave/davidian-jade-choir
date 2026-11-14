@@ -3,9 +3,10 @@
 This plugin was built with generative AI.
 
 - **Tool:** Claude Code, Anthropic's coding assistant, using Anthropic's Claude models (Opus).
-- **Human role:** Davidian set the requirements and the design direction, supplied the reference schematic, and decides what is released.
+- **Human role:** Davidian set the requirements and the design direction, supplied the reference schematics, service notes and manual, pointed to the reverb tank's replacement, and decides what is released.
 - **What the AI did:**
-  - Read the component values and wiring off the reference schematic, and the control functions off the owner's manual.
+  - Read the component values, wiring and printed DC and signal voltages off the service notes' circuit diagram, and the control functions off the owner's manual.
+  - Calibrated each JFET to its printed DC operating point, within the datasheet's ranges.
   - Wrote the circuit simulator and the amplifier model, the LV2 plugin and GUI code, and the panel layout. The stroke font, renderer and window code come from the earlier Davidian Bi-Lumen, also AI-written.
   - Wrote the VST3 and Audio Unit wrappers around the same circuit and panel code.
   - Wrote the build files, the LV2 metadata, the tests and the documentation.

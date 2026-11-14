@@ -82,41 +82,41 @@ static void test_editor(IEditController* ctrl, Handler& handler)
     wc.hInstance = GetModuleHandleA(nullptr);
     wc.lpszClassName = "JadeChoirTestFrame";
     RegisterClassA(&wc);
-    HWND frame = CreateWindowA("JadeChoirTestFrame", "host", WS_OVERLAPPEDWINDOW, 0, 0, 1140, 520, nullptr,
+    HWND frame = CreateWindowA("JadeChoirTestFrame", "host", WS_OVERLAPPEDWINDOW, 0, 0, 1140, 700, nullptr,
                                nullptr, wc.hInstance, nullptr);
     IPlugView* view = ctrl->createView(ViewType::kEditor);
     check("controller creates an editor", view != nullptr);
     if (!view)
         return;
     ViewRect r;
-    check("editor is 1100 x 470", view->getSize(&r) == kResultOk && r.getWidth() == 1100 && r.getHeight() == 470);
+    check("editor is 1100 x 640", view->getSize(&r) == kResultOk && r.getWidth() == 1100 && r.getHeight() == 640);
     check("editor supports HWND", view->isPlatformTypeSupported(kPlatformTypeHWND) == kResultTrue);
     check("editor attaches to a host window", view->attached(frame, kPlatformTypeHWND) == kResultOk);
     HWND panel = FindWindowExA(frame, nullptr, "DavidianJadeChoirVST3", nullptr);
     check("editor window is a child of the host window", panel != nullptr);
     if (panel) {
         ParamValue v = -1;
-        /* Chorus footswitch at (468, 392): one click turns it off. */
+        /* Chorus footswitch at (300, 572): one click turns it off. */
         handler.log.clear();
-        SendMessageA(panel, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(468, 392));
-        SendMessageA(panel, WM_LBUTTONUP, 0, MAKELPARAM(468, 392));
+        SendMessageA(panel, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(300, 572));
+        SendMessageA(panel, WM_LBUTTONUP, 0, MAKELPARAM(300, 572));
         check("footswitch click is one begin/perform/end edit", one_edit(handler.log, PORT_FS_CHORUS, &v) && v == 0.0);
         check("controller follows the click", ctrl->getParamNormalized(PORT_FS_CHORUS) == 0.0);
 
-        /* Treble knob at (268, 168): dragging up 108 px adds 0.6, from 0.5 to the top. */
+        /* CH 1 Treble at (250, 150): dragging up 108 px adds 0.6, from 0.5 to the top. */
         handler.log.clear();
-        SendMessageA(panel, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(268, 168));
-        SendMessageA(panel, WM_MOUSEMOVE, MK_LBUTTON, MAKELPARAM(268, 114));
-        SendMessageA(panel, WM_MOUSEMOVE, MK_LBUTTON, MAKELPARAM(268, 60));
-        SendMessageA(panel, WM_LBUTTONUP, 0, MAKELPARAM(268, 60));
-        check("knob drag is one edit with several performs", one_edit(handler.log, PORT_TREBLE, &v)
+        SendMessageA(panel, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(250, 150));
+        SendMessageA(panel, WM_MOUSEMOVE, MK_LBUTTON, MAKELPARAM(250, 96));
+        SendMessageA(panel, WM_MOUSEMOVE, MK_LBUTTON, MAKELPARAM(250, 42));
+        SendMessageA(panel, WM_LBUTTONUP, 0, MAKELPARAM(250, 42));
+        check("knob drag is one edit with several performs", one_edit(handler.log, PORT_TREBLE1, &v)
                                                                 && handler.log.size() >= 4);
         check("knob drag ends at the top of its range", std::fabs(v - 1.0) < 1e-6);
 
-        /* Mode switch at (1016, 178): the top position is Vibrato. */
+        /* Mode switch at (920, 368): the top position is Vibrato. */
         handler.log.clear();
-        SendMessageA(panel, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(1016, 156));
-        SendMessageA(panel, WM_LBUTTONUP, 0, MAKELPARAM(1016, 156));
+        SendMessageA(panel, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(920, 346));
+        SendMessageA(panel, WM_LBUTTONUP, 0, MAKELPARAM(920, 346));
         check("switch click selects Vibrato", one_edit(handler.log, PORT_MODE, &v) && v == 0.0);
 
         handler.log.clear();
@@ -125,7 +125,7 @@ static void test_editor(IEditController* ctrl, Handler& handler)
         check("clicking empty panel sends nothing", handler.log.empty());
 
         /* Values from the host (automation, the LFO lamp) reach the open editor without trouble. */
-        check("host values reach the editor", ctrl->setParamNormalized(PORT_BASS, 0.7) == kResultOk
+        check("host values reach the editor", ctrl->setParamNormalized(PORT_BASS2, 0.7) == kResultOk
                                                   && ctrl->setParamNormalized(PORT_LFO, 0.7) == kResultOk);
     }
     check("editor detaches", view->removed() == kResultOk);
@@ -226,13 +226,13 @@ int main(int argc, char** argv)
                 bypass += (info.flags & ParameterInfo::kIsBypass) && info.id == PORT_ENABLED;
                 readonly += (info.flags & ParameterInfo::kIsReadOnly) != 0;
             }
-        check("19 parameters: 17 controls, bypass and the LFO lamp", ctrl->getParameterCount() == 19);
+        check("24 parameters: 22 controls, bypass and the LFO lamp", ctrl->getParameterCount() == 24);
         check("one bypass parameter", bypass == 1);
         check("the LFO lamp is read only", readonly == 1);
         String128 text;
         ctrl->getParamStringByValue(PORT_DISTORTION, 0.0, text);
         check("distortion at zero shows as Off", text[0] == 'O' && text[1] == 'f' && text[2] == 'f' && !text[3]);
-        ctrl->getParamStringByValue(PORT_VOLUME, 0.45, text);
+        ctrl->getParamStringByValue(PORT_VOLUME2, 0.45, text);
         check("volume shows on the panel's 0-10 scale", text[0] == '4' && text[1] == '.' && text[2] == '5');
     }
 

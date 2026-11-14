@@ -3,8 +3,8 @@
 /* The GUI panel: layout, drawing and mouse handling, independent of any windowing system.
  *
  * The design is original, in the Davidian house style. It keeps the functional grouping of
- * the amplifier (input, preamp, distortion and reverb, chorus/vibrato, footswitches, line
- * outs) but uses its own name, lettering and colours, and none of the original unit's
+ * the amplifier (two channels, the second with distortion and reverb, chorus/vibrato,
+ * footswitches) but uses its own name, lettering and colours, and none of the original unit's
  * branding or panel artwork. */
 #ifndef UI_PANEL_H
 #define UI_PANEL_H
@@ -18,7 +18,7 @@
 #include "style.h"
 
 #define PANEL_W 1100
-#define PANEL_H 470
+#define PANEL_H 640
 
 enum { W_KNOB, W_TRIM, W_SWITCH, W_FOOT, W_SLIDER };
 
@@ -36,29 +36,40 @@ typedef struct {
 } Widget;
 
 static const Widget WIDGETS[] = {
-    { W_SWITCH, PORT_INPUT_JACK, 46, 190, 0, 0, 1, 0, 0, "JACK", "INPUT JACK", 0, 0, { "HIGH", "LOW" }, 2 },
-    { W_KNOB, PORT_VOLUME, 172, 168, 28, 0, 1, 0.4f, 0, "VOLUME", "VOLUME", "0", "10", {0}, 0 },
-    { W_KNOB, PORT_TREBLE, 268, 168, 28, 0, 1, 0.5f, 0, "TREBLE", "TREBLE", "0", "10", {0}, 0 },
-    { W_KNOB, PORT_MIDDLE, 364, 168, 28, 0, 1, 0.5f, 0, "MIDDLE", "MIDDLE", "0", "10", {0}, 0 },
-    { W_KNOB, PORT_BASS, 460, 168, 28, 0, 1, 0.5f, 0, "BASS", "BASS", "0", "10", {0}, 0 },
-    { W_KNOB, PORT_HI_TREBLE, 556, 168, 28, 0, 1, 0.0f, 0, "HI-TREBLE", "HI-TREBLE", "0", "10", {0}, 0 },
-    { W_KNOB, PORT_DISTORTION, 662, 168, 28, 0, 1, 0.0f, 0, "DISTORTION", "DISTORTION", "OFF", "10", {0}, 0 },
-    { W_KNOB, PORT_REVERB, 758, 168, 28, 0, 1, 0.3f, 0, "REVERB", "REVERB", "0", "10", {0}, 0 },
-    { W_KNOB, PORT_SPEED, 856, 168, 28, 0, 1, 0.5f, 0, "SPEED", "VIBRATO SPEED", "0", "10", {0}, 0 },
-    { W_KNOB, PORT_DEPTH, 944, 168, 28, 0, 1, 0.5f, 0, "DEPTH", "VIBRATO DEPTH", "0", "10", {0}, 0 },
-    { W_SWITCH, PORT_MODE, 1016, 178, 0, 0, 2, 2, 0, "MODE", "CHORUS MODE", 0, 0, { "VIB", "OFF", "CHORUS" }, 3 },
-    { W_FOOT, PORT_FS_DIST, 112, 392, 25, 0, 1, 1, 0, "DISTORTION", "DISTORTION FOOTSWITCH", 0, 0, { "OFF", "ON" }, 2 },
-    { W_FOOT, PORT_FS_REVERB, 290, 392, 25, 0, 1, 1, 0, "REVERB", "REVERB FOOTSWITCH", 0, 0, { "OFF", "ON" }, 2 },
-    { W_FOOT, PORT_FS_CHORUS, 468, 392, 25, 0, 1, 1, 0, "CHORUS-VIB", "CHORUS FOOTSWITCH", 0, 0, { "OFF", "ON" }, 2 },
-    { W_SWITCH, PORT_LINE_OUT, 660, 392, 0, 0, 1, 0, 0, "LINE OUT", "LINE OUT", 0, 0, { "STEREO", "MIXED" }, 2 },
-    { W_TRIM, PORT_VOLTS, 860, 386, 17, 0.1f, 10.0f, 1.0f, 1, "INPUT V", "VOLTS AT 0 DBFS", 0, 0, {0}, 0 },
-    { W_TRIM, PORT_OUTPUT, 990, 386, 17, -24.0f, 12.0f, 0.0f, 0, "OUTPUT", "OUTPUT LEVEL", 0, 0, {0}, 0 },
+    /* CHANNEL 1 */
+    { W_SWITCH, PORT_BRIGHT1, 46, 160, 0, 0, 1, 0, 0, "BRIGHT", "CH 1 BRIGHT", 0, 0, { "OFF", "ON" }, 2 },
+    { W_KNOB, PORT_VOLUME1, 158, 150, 28, 0, 1, 0.4f, 0, "VOLUME", "CH 1 VOLUME", "0", "10", {0}, 0 },
+    { W_KNOB, PORT_TREBLE1, 250, 150, 28, 0, 1, 0.5f, 0, "TREBLE", "CH 1 TREBLE", "0", "10", {0}, 0 },
+    { W_KNOB, PORT_MIDDLE1, 342, 150, 28, 0, 1, 0.5f, 0, "MIDDLE", "CH 1 MIDDLE", "0", "10", {0}, 0 },
+    { W_KNOB, PORT_BASS1, 434, 150, 28, 0, 1, 0.5f, 0, "BASS", "CH 1 BASS", "0", "10", {0}, 0 },
+    /* INPUT */
+    { W_SWITCH, PORT_CHANNEL, 552, 160, 0, 0, 2, 1, 0, "CHANNEL", "INPUT CHANNEL", 0, 0, { "CH 1", "CH 2", "BOTH" }, 3 },
+    { W_SWITCH, PORT_INPUT_JACK, 658, 160, 0, 0, 1, 0, 0, "JACK", "INPUT JACK", 0, 0, { "HIGH", "LOW" }, 2 },
+    /* LEVELS */
+    { W_TRIM, PORT_VOLTS, 860, 150, 17, 0.1f, 10.0f, 1.0f, 1, "INPUT V", "VOLTS AT 0 DBFS", 0, 0, {0}, 0 },
+    { W_TRIM, PORT_OUTPUT, 990, 150, 17, -24.0f, 12.0f, 0.0f, 0, "OUTPUT", "OUTPUT LEVEL", 0, 0, {0}, 0 },
+    /* CHANNEL 2 */
+    { W_SWITCH, PORT_BRIGHT2, 46, 368, 0, 0, 1, 0, 0, "BRIGHT", "CH 2 BRIGHT", 0, 0, { "OFF", "ON" }, 2 },
+    { W_KNOB, PORT_VOLUME2, 158, 358, 28, 0, 1, 0.4f, 0, "VOLUME", "CH 2 VOLUME", "0", "10", {0}, 0 },
+    { W_KNOB, PORT_TREBLE2, 250, 358, 28, 0, 1, 0.5f, 0, "TREBLE", "CH 2 TREBLE", "0", "10", {0}, 0 },
+    { W_KNOB, PORT_MIDDLE2, 342, 358, 28, 0, 1, 0.5f, 0, "MIDDLE", "CH 2 MIDDLE", "0", "10", {0}, 0 },
+    { W_KNOB, PORT_BASS2, 434, 358, 28, 0, 1, 0.5f, 0, "BASS", "CH 2 BASS", "0", "10", {0}, 0 },
+    { W_KNOB, PORT_DISTORTION, 526, 358, 28, 0, 1, 0.0f, 0, "DISTORTION", "DISTORTION", "OFF", "10", {0}, 0 },
+    { W_KNOB, PORT_REVERB, 618, 358, 28, 0, 1, 0.3f, 0, "REVERB", "REVERB", "0", "10", {0}, 0 },
+    /* CHORUS - VIBRATO */
+    { W_KNOB, PORT_SPEED, 752, 358, 28, 0, 1, 0.5f, 0, "SPEED", "VIBRATO SPEED", "0", "10", {0}, 0 },
+    { W_KNOB, PORT_DEPTH, 844, 358, 28, 0, 1, 0.5f, 0, "DEPTH", "VIBRATO DEPTH", "0", "10", {0}, 0 },
+    { W_SWITCH, PORT_MODE, 920, 368, 0, 0, 2, 2, 0, "MODE", "CHORUS MODE", 0, 0, { "VIB", "OFF", "CHORUS" }, 3 },
+    /* FOOTSWITCHES */
+    { W_FOOT, PORT_FS_CHORUS, 300, 572, 25, 0, 1, 1, 0, "CHORUS-VIB", "CHORUS FOOTSWITCH", 0, 0, { "OFF", "ON" }, 2 },
+    { W_FOOT, PORT_FS_REVERB, 550, 572, 25, 0, 1, 1, 0, "REVERB", "REVERB FOOTSWITCH", 0, 0, { "OFF", "ON" }, 2 },
+    { W_FOOT, PORT_FS_DIST, 800, 572, 25, 0, 1, 1, 0, "DISTORTION", "DISTORTION FOOTSWITCH", 0, 0, { "OFF", "ON" }, 2 },
 };
 #define N_WIDGETS ((int)(sizeof WIDGETS / sizeof WIDGETS[0]))
 
 /* The chorus/vibrato LFO lamp, driven by the plugin's LFO output port. */
 static const struct { int port; float x, y; const char* label; } LAMPS[] = {
-    { PORT_LFO, 1016, 254, "LFO" },
+    { PORT_LFO, 1040, 352, "LFO" },
 };
 #define N_LAMPS ((int)(sizeof LAMPS / sizeof LAMPS[0]))
 
@@ -223,19 +234,19 @@ static void draw_background(Panel* p)
 
     /* Header */
     text_draw(&c, 30, 18, "DAVIDIAN JADE CHOIR", 20, 3.2f, 2.8f, COL_INK, 1);
-    text_draw(&c, 32, 46, "STEREO CHORUS AMPLIFIER HEAD - PREAMP, CHORUS, SPRING AND LINE OUTS", 7, 2.4f, 1.1f, COL_DIM, 1);
+    text_draw(&c, 32, 46, "TWO-CHANNEL STEREO CHORUS AMPLIFIER - 2 X 60 W", 7, 2.4f, 1.1f, COL_DIM, 1);
     cv_line(&c, 30, 60, 680, 60, 1.2f, COL_AMBER, 0.55f);
     /* Readout window */
     cv_rrect(&c, 704, 14, 1084, 56, 6, 0x000000, 0.6f);
     cv_rrect(&c, 706, 16, 1082, 54, 5, 0x0d0a06, 1);
     cv_rrect_line(&c, 704, 14, 1084, 56, 6, 1.2f, 0x6d7179, 0.8f);
 
-    draw_section(&c, 16, 76, 112, 300, "INPUT");
-    draw_section(&c, 122, 76, 606, 300, "PREAMP");
-    draw_section(&c, 616, 76, 804, 300, "DRIVE + SPRING");
-    draw_section(&c, 814, 76, 1084, 300, "CHORUS - VIBRATO");
-    draw_section(&c, 16, 320, 560, 456, "FOOTSWITCHES");
-    draw_section(&c, 570, 320, 1084, 456, "LINE OUTPUTS");
+    draw_section(&c, 16, 76, 490, 268, "CHANNEL 1");
+    draw_section(&c, 500, 76, 760, 268, "INPUT");
+    draw_section(&c, 770, 76, 1084, 268, "LEVELS");
+    draw_section(&c, 16, 286, 674, 478, "CHANNEL 2");
+    draw_section(&c, 684, 286, 1084, 478, "CHORUS - VIBRATO");
+    draw_section(&c, 16, 496, 1084, 624, "FOOTSWITCHES");
 
     for (i = 0; i < N_WIDGETS; ++i) {
         const Widget* w = &WIDGETS[i];
