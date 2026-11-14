@@ -1,0 +1,196 @@
+@prefix doap:  <http://usefulinc.com/ns/doap#> .
+@prefix lv2:   <http://lv2plug.in/ns/lv2core#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix pprop: <http://lv2plug.in/ns/ext/port-props#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix units: <http://lv2plug.in/ns/extensions/units#> .
+
+<urn:davidian:jade-choir>
+	a lv2:Plugin , lv2:AmplifierPlugin ;
+	doap:name "Davidian Jade Choir" ;
+	doap:license <https://spdx.org/licenses/GPL-3.0-or-later> ;
+	rdfs:comment "Circuit model of a classic 1984 stereo chorus amplifier head, from its schematic: input stage, switchable diode-clipper distortion, tone stack with hi-treble, BBD chorus/vibrato with its LFO and JFET switching, spring reverb drive and recovery, and the two mixers that feed the normal (dry) and effect line outputs. GPL-3.0-or-later. Made with generative AI (Claude Code); see AI_USAGE.md in the bundle." ;
+	lv2:minorVersion 0 ;
+	lv2:microVersion 0 ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	lv2:port [
+		a lv2:AudioPort , lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "in" ;
+		lv2:name "In"
+	] , [
+		a lv2:AudioPort , lv2:OutputPort ;
+		lv2:index 1 ;
+		lv2:symbol "out_l" ;
+		lv2:name "Out L (Normal)"
+	] , [
+		a lv2:AudioPort , lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "out_r" ;
+		lv2:name "Out R (Effect)"
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 3 ;
+		lv2:symbol "input_jack" ;
+		lv2:name "Input Jack" ;
+		lv2:default 0 ;
+		lv2:minimum 0 ;
+		lv2:maximum 1 ;
+		lv2:portProperty lv2:integer , lv2:enumeration ;
+		lv2:scalePoint [ rdfs:label "High" ; rdf:value 0 ] , [ rdfs:label "Low" ; rdf:value 1 ]
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "volume" ;
+		lv2:name "Volume" ;
+		lv2:default 0.4 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 5 ;
+		lv2:symbol "treble" ;
+		lv2:name "Treble" ;
+		lv2:default 0.5 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 6 ;
+		lv2:symbol "middle" ;
+		lv2:name "Middle" ;
+		lv2:default 0.5 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 7 ;
+		lv2:symbol "bass" ;
+		lv2:name "Bass" ;
+		lv2:default 0.5 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 8 ;
+		lv2:symbol "hi_treble" ;
+		lv2:name "Hi-Treble" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 9 ;
+		lv2:symbol "distortion" ;
+		lv2:name "Distortion" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 10 ;
+		lv2:symbol "reverb" ;
+		lv2:name "Reverb" ;
+		lv2:default 0.3 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 11 ;
+		lv2:symbol "speed" ;
+		lv2:name "Vibrato Speed" ;
+		lv2:default 0.5 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 12 ;
+		lv2:symbol "depth" ;
+		lv2:name "Vibrato Depth" ;
+		lv2:default 0.5 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 13 ;
+		lv2:symbol "mode" ;
+		lv2:name "Chorus Mode" ;
+		lv2:default 2 ;
+		lv2:minimum 0 ;
+		lv2:maximum 2 ;
+		lv2:portProperty lv2:integer , lv2:enumeration ;
+		lv2:scalePoint [ rdfs:label "Vibrato" ; rdf:value 0 ] , [ rdfs:label "Off" ; rdf:value 1 ] , [ rdfs:label "Chorus" ; rdf:value 2 ]
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 14 ;
+		lv2:symbol "fs_dist" ;
+		lv2:name "Distortion Footswitch" ;
+		lv2:default 1 ;
+		lv2:minimum 0 ;
+		lv2:maximum 1 ;
+		lv2:portProperty lv2:toggled
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 15 ;
+		lv2:symbol "fs_reverb" ;
+		lv2:name "Reverb Footswitch" ;
+		lv2:default 1 ;
+		lv2:minimum 0 ;
+		lv2:maximum 1 ;
+		lv2:portProperty lv2:toggled
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 16 ;
+		lv2:symbol "fs_chorus" ;
+		lv2:name "Chorus Footswitch" ;
+		lv2:default 1 ;
+		lv2:minimum 0 ;
+		lv2:maximum 1 ;
+		lv2:portProperty lv2:toggled
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 17 ;
+		lv2:symbol "line_out" ;
+		lv2:name "Line Out" ;
+		lv2:default 0 ;
+		lv2:minimum 0 ;
+		lv2:maximum 1 ;
+		lv2:portProperty lv2:integer , lv2:enumeration ;
+		lv2:scalePoint [ rdfs:label "Stereo" ; rdf:value 0 ] , [ rdfs:label "Mixed" ; rdf:value 1 ]
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 18 ;
+		lv2:symbol "volts" ;
+		lv2:name "Volts at 0 dBFS" ;
+		lv2:default 1.0 ;
+		lv2:minimum 0.1 ;
+		lv2:maximum 10.0 ;
+		lv2:portProperty pprop:logarithmic
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 19 ;
+		lv2:symbol "output" ;
+		lv2:name "Output" ;
+		lv2:default 0.0 ;
+		lv2:minimum -24.0 ;
+		lv2:maximum 12.0 ;
+		units:unit units:db
+	] , [
+		a lv2:ControlPort , lv2:InputPort ;
+		lv2:index 20 ;
+		lv2:symbol "enabled" ;
+		lv2:name "Enabled" ;
+		lv2:default 1 ;
+		lv2:minimum 0 ;
+		lv2:maximum 1 ;
+		lv2:designation lv2:enabled ;
+		lv2:portProperty lv2:toggled
+	] , [
+		a lv2:ControlPort , lv2:OutputPort ;
+		lv2:index 21 ;
+		lv2:symbol "lfo" ;
+		lv2:name "LFO" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+		lv2:portProperty pprop:notOnGUI
+	] .
