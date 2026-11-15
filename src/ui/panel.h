@@ -61,9 +61,9 @@ static const Widget WIDGETS[] = {
     { W_KNOB, PORT_DEPTH, 844, 358, 28, 0, 1, 0.5f, 0, "DEPTH", "VIBRATO DEPTH", "0", "10", {0}, 0 },
     { W_SWITCH, PORT_MODE, 920, 368, 0, 0, 2, 2, 0, "MODE", "CHORUS MODE", 0, 0, { "VIB", "OFF", "CHORUS" }, 3 },
     /* FOOTSWITCHES */
-    { W_FOOT, PORT_FS_CHORUS, 300, 572, 25, 0, 1, 1, 0, "CHORUS-VIB", "CHORUS FOOTSWITCH", 0, 0, { "OFF", "ON" }, 2 },
-    { W_FOOT, PORT_FS_REVERB, 550, 572, 25, 0, 1, 1, 0, "REVERB", "REVERB FOOTSWITCH", 0, 0, { "OFF", "ON" }, 2 },
-    { W_FOOT, PORT_FS_DIST, 800, 572, 25, 0, 1, 1, 0, "DISTORTION", "DISTORTION FOOTSWITCH", 0, 0, { "OFF", "ON" }, 2 },
+    { W_FOOT, PORT_FS_CHORUS, 300, 558, 25, 0, 1, 1, 0, "CHORUS-VIB", "CHORUS FOOTSWITCH", 0, 0, { "OFF", "ON" }, 2 },
+    { W_FOOT, PORT_FS_REVERB, 550, 558, 25, 0, 1, 1, 0, "REVERB", "REVERB FOOTSWITCH", 0, 0, { "OFF", "ON" }, 2 },
+    { W_FOOT, PORT_FS_DIST, 800, 558, 25, 0, 1, 1, 0, "DISTORTION", "DISTORTION FOOTSWITCH", 0, 0, { "OFF", "ON" }, 2 },
 };
 #define N_WIDGETS ((int)(sizeof WIDGETS / sizeof WIDGETS[0]))
 
@@ -241,12 +241,12 @@ static void draw_background(Panel* p)
     cv_rrect(&c, 706, 16, 1082, 54, 5, 0x0d0a06, 1);
     cv_rrect_line(&c, 704, 14, 1084, 56, 6, 1.2f, 0x6d7179, 0.8f);
 
-    draw_section(&c, 16, 76, 490, 268, "CHANNEL 1");
-    draw_section(&c, 500, 76, 760, 268, "INPUT");
-    draw_section(&c, 770, 76, 1084, 268, "LEVELS");
-    draw_section(&c, 16, 286, 674, 478, "CHANNEL 2");
-    draw_section(&c, 684, 286, 1084, 478, "CHORUS - VIBRATO");
-    draw_section(&c, 16, 496, 1084, 624, "FOOTSWITCHES");
+    draw_section(&c, 16, 76, 490, 258, "CHANNEL 1");
+    draw_section(&c, 500, 76, 760, 258, "INPUT");
+    draw_section(&c, 770, 76, 1084, 258, "LEVELS");
+    draw_section(&c, 16, 274, 674, 466, "CHANNEL 2");
+    draw_section(&c, 684, 274, 1084, 466, "CHORUS - VIBRATO");
+    draw_section(&c, 16, 482, 1084, 624, "FOOTSWITCHES");
 
     for (i = 0; i < N_WIDGETS; ++i) {
         const Widget* w = &WIDGETS[i];

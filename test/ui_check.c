@@ -189,7 +189,7 @@ int main(int argc, char** argv)
     check("clicking the top of the mode switch selects Vibrato", last_port == PORT_MODE && last_value == 0.0f);
     click(child, 658, 160 + 18);
     check("clicking the bottom of the jack switch selects Low", last_port == PORT_INPUT_JACK && last_value == 1.0f);
-    click(child, 550, 572);
+    click(child, 550, 558);
     check("the reverb footswitch turns it off", last_port == PORT_FS_REVERB && last_value == 0.0f);
     click(child, 552, 160 + 18);
     check("clicking the bottom of the channel switch selects Both", last_port == PORT_CHANNEL && last_value == 2.0f);

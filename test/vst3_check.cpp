@@ -96,10 +96,10 @@ static void test_editor(IEditController* ctrl, Handler& handler)
     check("editor window is a child of the host window", panel != nullptr);
     if (panel) {
         ParamValue v = -1;
-        /* Chorus footswitch at (300, 572): one click turns it off. */
+        /* Chorus footswitch at (300, 558): one click turns it off. */
         handler.log.clear();
-        SendMessageA(panel, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(300, 572));
-        SendMessageA(panel, WM_LBUTTONUP, 0, MAKELPARAM(300, 572));
+        SendMessageA(panel, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(300, 558));
+        SendMessageA(panel, WM_LBUTTONUP, 0, MAKELPARAM(300, 558));
         check("footswitch click is one begin/perform/end edit", one_edit(handler.log, PORT_FS_CHORUS, &v) && v == 0.0);
         check("controller follows the click", ctrl->getParamNormalized(PORT_FS_CHORUS) == 0.0);
 
